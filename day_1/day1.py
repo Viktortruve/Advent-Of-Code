@@ -1,40 +1,19 @@
 a = []
-test = [199,
-200,
-208,
-210,
-200,
-207,
-240,
-269,
-260,
-263]
+
 with open("input.txt") as file:
 	for line in file:
 		a.append(int(line.strip()))
 def q1():
-    c = 0
-    for i in range(0,len(a)-1):
-        if(a[i+1] > a[i]):
-            c += 1
-    print(c)
-
-q1()
+    return [ a[i+1] > a[i] for i in range(0,len(a)-1)].count(True)
 
 def q2():
-    c = 0
-    for i in range(0,len(a)-3):
-        l1 = a[i:i+3]
-        l2 = a[i+1:i+4]
-        if len(l2) < 3:
-            break
-        if sum(l2) > sum(l1):
-            c += 1 
-    print(c)
+    return [ sum(a[i+1:i+4]) > sum(a[i:i+3]) if len(a[i+1:i+4]) == 3 else False for i in range(0,len(a)-3)].count(True)
 
-q2()
+ans1 = q1()
+ans2 = q2()
 
-
+print("Answer to Question 1:",ans1)
+print("Answer to Question 2:",ans2)
 
 
 
