@@ -5,7 +5,7 @@ type Result = Int
 
 main :: IO ()
 main = do
-  input <- parse <$> readFile "input.1.txt"
+  input <- parse <$> readFile "input.txt"
   putStrLn "DAY 1"
   putStrLn $ "Solution 1: " ++ show (solve1 input)
   putStrLn $ "Solution 2: " ++ show (solve2 input)
