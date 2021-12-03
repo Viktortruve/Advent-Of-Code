@@ -7,7 +7,11 @@ type Input  = [[Binary]]
 type Result = Int
 
 data Binary = Zero | One
+
   deriving (Eq)
+
+  deriving (Eq, Show)
+
 
 not :: Binary -> Binary
 not Zero = One
@@ -24,6 +28,11 @@ char2bin '0' = Zero
 b2i :: [Binary] -> Int
 b2i binary = sum [if isone bin then 2^power else 0 | (bin, power) <- xxx ]
   where xxx = zip (reverse binary) [0 ..]
+char2bin _ = undefined
+
+b2i :: [Binary] -> Int
+b2i binary = sum [if isone bit then 2^power else 0 | (bit, power) <- bits ]
+  where bits = zip (reverse binary) [0 ..]
 
 main = do
   input <- parse <$> readFile "input.txt"
@@ -42,9 +51,44 @@ gamma :: Input -> [Binary]
 gamma = map (common . partition isone) . transpose
   where
     common (ones, zeroes) = if length ones > length zeroes then One else Zero
+solve1 i = gammarating * epsilonrating
+  where gammarating   = b2i . gamma $ i
+        epsilonrating = b2i . epsilon $ i
+
+gamma :: Input -> [Binary]
+gamma = map (mostCommon None . partition isone) . transpose
 
 epsilon :: Input -> [Binary]
 epsilon = map not . gamma -- Invert the result of gamma to calculate least common bits
 
 solve2 :: Input -> Result
 solve2 = undefined
+solve2 i = co2 * ogr
+  where
+    co2 = b2i . findObscureRating CO2 $ i
+    ogr = b2i . findObscureRating OGR $ i
+
+data Criteria = CO2 | OGR | None
+  deriving (Eq, Show)
+
+findObscureRating  :: Criteria -> Input -> [Binary]
+findObscureRating criteria input = pluckRating $ scanl (flip (criteriafilter criteria)) input positions
+  where
+    pluckRating = head . head . dropWhile ((> 1) . length)
+    positions = [0..(length input)]
+
+criteriafilter :: Criteria -> Int -> [[Binary]] -> [[Binary]]
+criteriafilter c pos input = filter hasMostCommonBit input
+  where mostCommonBit    = mostCommon c . partition isone . map (!! pos)
+        keep             = mostCommonBit input
+        hasMostCommonBit = \num -> (num !! pos) == keep
+
+mostCommon :: Criteria -> ([Binary], [Binary]) -> Binary
+mostCommon None (ones, zeroes)
+  | length ones > length zeroes = One
+  | otherwise = Zero
+mostCommon CO2 (ones, zeroes)
+  | length ones == length zeroes = Zero
+  | length zeroes < length ones  = Zero
+  | otherwise = One
+mostCommon OGR input = not . mostCommon CO2 $ input
