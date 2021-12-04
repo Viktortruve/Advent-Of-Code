@@ -1,4 +1,4 @@
-
+import numpy as np
 from collections import defaultdict
 import pprint
 first = True
@@ -26,8 +26,7 @@ with open("input.txt") as file:
 
 def has_bingo(numbers,m):
 	 last_num = numbers[len(numbers)-1]
-	 c = [m[j][i] for i in range(0,len(m)) for j in range(0,len(m))]
-	 c = (list(c[i:i+len(m[0])] for i in range(0, len(c), len(m[0]))))
+	 c = np.transpose(m)
 	 x = [item for item in c if set(item).issubset(set(numbers))]
 	 y = [item for item in m if set(item).issubset(set(numbers))]
 	 if x or y:
@@ -37,7 +36,7 @@ def has_bingo(numbers,m):
 def q1():
 	for i in range(0,len(numbers)):
 		for v in players.values():
-			q = has_bingo(numbers[0:i+1],v)
+			q = has_bingo(numbers[:i+1],v)
 			if q:
 				l,num = q
 				flat_v = [item for sublist in v for item in sublist]
@@ -49,7 +48,7 @@ def q2():
 		for k,v in players.items():
 			if k in finished:
 				continue
-			q = has_bingo(numbers[0:i+1],v)
+			q = has_bingo(numbers[:i+1],v)
 			if q:
 				l,num = q
 				flat_v = [item for sublist in v for item in sublist]
