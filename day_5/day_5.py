@@ -15,9 +15,13 @@ def q1():
 	m_size = max(max(xs),max(ys))
 	m = np.zeros((m_size+1,m_size+1))
 	for item in l:
-		if item[0][0] == item[1][0] or item[0][1] == item[1][1]:
-			x_points = [i for i in range(item[0][0],item[1][0]+1)] if item[1][0] > item[0][0] else [i for i in range(item[0][0],item[1][0]-1,-1)]
-			y_points = [i for i in range(item[0][1],item[1][1]+1)] if item[1][1] > item[0][1] else [i for i in range(item[0][1],item[1][1]-1,-1)]
+		x1 = item[0][0]
+		x2 = item[1][0]
+		y1 = item[1][0]
+		y2 = item[1][1]
+		if x1 == x2 or y1 == y2:
+			x_points = [i for i in range(x1,x2+1)] if x2 > x1 else [i for i in range(x1,x2-1,-1)]
+			y_points = [i for i in range(y1,y2+1)] if y2 > y1 else [i for i in range(y1,y2-1,-1)]
 			z = list(zip(x_points,cycle(y_points)) if len(x_points) > len(y_points) else zip(cycle(x_points),y_points))
 			for t in z:
 				c[t] += 1
@@ -33,9 +37,14 @@ def q2():
 	ys = [item[1] for item in dz]
 	m_size = max(max(xs),max(ys))
 	m = np.zeros((m_size+1,m_size+1))
+
 	for item in l:
-		x_points = [i for i in range(item[0][0],item[1][0]+1)] if item[1][0] > item[0][0] else [i for i in range(item[0][0],item[1][0]-1,-1)]
-		y_points = [i for i in range(item[0][1],item[1][1]+1)] if item[1][1] > item[0][1] else [i for i in range(item[0][1],item[1][1]-1,-1)]
+		x1 = item[0][0]
+		x2 = item[1][0]
+		y1 = item[1][0]
+		y2 = item[1][1]
+		x_points = [i for i in range(x1,x2+1)] if x2 > x1 else [i for i in range(x1,x2-1,-1)]
+		y_points = [i for i in range(y1,y2+1)] if y2 > y1 else [i for i in range(y1,y2-1,-1)]
 		z = list(zip(x_points,cycle(y_points)) if len(x_points) > len(y_points) else zip(cycle(x_points),y_points))
 		for t in z:
 			c[t] += 1
