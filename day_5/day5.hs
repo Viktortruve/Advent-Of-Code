@@ -49,15 +49,14 @@ solve2 lines = solve seafloor
 
 diagonal :: Coord -> Coord -> Maybe [Coord]
 diagonal some other
-  | first `elem` lefts  = pure lefts
-  | first `elem` rights = pure rights
-  | otherwise           = Nothing
-  where lefts  = last : takeWhile (\c -> x c >= x first || y c >= y first) (map nextL lefts)
-        rights = last : takeWhile (\c -> x c <= x first || y c >= y first) (map nextR rights)
-        nextL  = \c -> C (x c - 1) (y c - 1)
-        nextR  = \c -> C (x c + 1) (y c - 1)
-        first  = minC some other
+  | abs (x last - x first) == abs (y last - y first) = pure $ zipWith C xs ys -- 45 degrees make the dream work
+  | otherwise = Nothing
+  where first  = minC some other
         last   = maxC some other
+        xs = if x last < x first
+             then [x last, x last + 1 .. x first] -- Form a right diagonal
+             else [x last, x last - 1 .. x first] -- Form a left diagonal
+        ys = [y last, y last - 1 .. 0]
 
 -- * Data Types
 
