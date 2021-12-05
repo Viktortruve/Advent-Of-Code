@@ -17,7 +17,7 @@ def q1():
 	for item in l:
 		x1 = item[0][0]
 		x2 = item[1][0]
-		y1 = item[1][0]
+		y1 = item[0][1]
 		y2 = item[1][1]
 		if x1 == x2 or y1 == y2:
 			x_points = [i for i in range(x1,x2+1)] if x2 > x1 else [i for i in range(x1,x2-1,-1)]
@@ -41,7 +41,7 @@ def q2():
 	for item in l:
 		x1 = item[0][0]
 		x2 = item[1][0]
-		y1 = item[1][0]
+		y1 = item[0][1]
 		y2 = item[1][1]
 		x_points = [i for i in range(x1,x2+1)] if x2 > x1 else [i for i in range(x1,x2-1,-1)]
 		y_points = [i for i in range(y1,y2+1)] if y2 > y1 else [i for i in range(y1,y2-1,-1)]
