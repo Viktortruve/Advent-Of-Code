@@ -1,9 +1,7 @@
 module Day5 where
 
-import           Control.Applicative hiding (many, (<|>))
-import qualified Data.Map            as M
-import           Data.Maybe          (mapMaybe)
-import           Text.Parsec         hiding (Line, parse)
+import qualified Data.Map           as M
+import           Text.Parsec        hiding (Line, parse)
 import           Text.Parsec.String
 
 type Input  = [Line]
@@ -19,40 +17,31 @@ main = do
 -- * Part 1
 
 solve1 :: Input -> Result
-solve1 lines = solve seafloor
-  where seafloor = map (liftL trace) . filter straight $ lines
+solve1 = solve . foldMap trace
 
 solve :: Seafloor -> Int
-solve = M.size . M.filter (>= 2) . diagram . mapSeafloor
+solve = M.size . M.filter (>= 2) . seafloor
 
-mapSeafloor :: Seafloor -> [Mapping]
-mapSeafloor = map $ foldr (\c -> M.insert c 1) mempty
-
-diagram :: [Mapping] -> Mapping
-diagram = foldr (M.unionWith (+)) mempty
-
-trace :: Coord -> Coord -> [Coord]
-trace some other = [ C x y | x <- [x first .. x last], y <- [y first .. y last]]
+trace :: Line -> Seafloor
+trace (some, other)
+  | x some == x other || y some == y other = s $ pure [ C x y | x <- [x first .. x last], y <- [y first .. y last]]
+  | otherwise = mempty
   where first = minC some other
         last  = maxC some other
-
-straight :: Line -> Bool
-straight l = x1 l == x2 l || y1 l == y2 l
 
 -- * Part 2
 
 solve2 :: Input -> Result
-solve2 lines = solve seafloor
-  where straights = map (liftL trace) . filter straight $ lines
-        diagonals = mapMaybe (liftL diagonal) $ lines
-        seafloor  = straights <> diagonals
+solve2 lines = solve (straights <> diagonals)
+  where straights = foldMap trace lines
+        diagonals = foldMap diagonal lines
 
-diagonal :: Coord -> Coord -> Maybe [Coord]
-diagonal some other
-  | abs (x last - x first) == abs (y last - y first) = pure $ zipWith C xs ys -- 45 degrees make the dream work
-  | otherwise = Nothing
-  where first  = minC some other
-        last   = maxC some other
+diagonal :: Line -> Seafloor
+diagonal (some, other)
+  | abs (x last - x first) == abs (y last - y first) = s . pure $ zipWith C xs ys -- 45 degrees make the dream work
+  | otherwise = mempty
+  where first = minC some other
+        last  = maxC some other
         xs = if x last < x first
              then [x last, x last + 1 .. x first] -- Form a right diagonal
              else [x last, x last - 1 .. x first] -- Form a left diagonal
@@ -60,28 +49,23 @@ diagonal some other
 
 -- * Data Types
 
-type Seafloor = [[Coord]]
+newtype Seafloor = S { seafloor :: M.Map Coord Int }
 
-type Mapping  = M.Map Coord Int
+s :: [[Coord]] -> Seafloor
+s = S . M.fromList . map (\c -> (c, 1)) . concat
+
+instance Semigroup Seafloor where
+  (S some) <> (S other) = S (M.unionWith (+) some other)
+
+instance Monoid Seafloor where
+  mempty = S M.empty
+
+type Line  = (Coord, Coord)
 
 data Coord = C { x :: Int
                , y :: Int
                }
   deriving (Eq, Ord)
-
-data Line  = L { left  :: Coord
-               , right :: Coord
-               }
-  deriving (Eq)
-
-x1 = x . left
-x2 = x . right
-y1 = y . left
-y2 = y . right
-
--- | Lift a function on Coordinates to a Line
-liftL :: (Coord -> Coord -> a) -> (Line -> a)
-liftL f line = f (left line) (right line)
 
 maxC :: Coord -> Coord -> Coord
 maxC c1 c2
@@ -105,7 +89,7 @@ line = do
   left  <- coordinate
   string " -> "
   right <- coordinate
-  return (L left right)
+  return (left, right)
 
 coordinate :: Parser Coord
 coordinate = do
