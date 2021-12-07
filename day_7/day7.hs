@@ -26,7 +26,13 @@ solve1 input = let possiblePositions = [min' .. max']
 -- * Part 2
 
 solve2 :: Input -> Result
-solve2 = undefined
+solve2 input = let possiblePositions = [min' .. max']
+               in  minimum $ map (move input) possiblePositions
+  where max' = maximum input
+        min' = minimum input
+        move :: Crabs -> Int -> Fuel
+        move crabs destination = sum $ map (\crab -> fuelcost $ abs (crab - destination)) crabs
+        fuelcost n = (n * (n + 1)) `div` 2
 
 -- * Data Types
 
