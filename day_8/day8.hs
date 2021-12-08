@@ -96,9 +96,9 @@ decodeNonObvious mappings signals = do
 makesSense :: M.Map Signal Number -> Bool
 makesSense mappings =
   let correctLenghts = and $ zipWith (==) lenghts (sort $ map (\(num, signal) -> (num, length signal)) $ M.toList reverseMappings)
-      validSegments = (length (five `sim` two) == 3)                                   -- 5,3 should all share 3 equal segments.
-                      && (six `diff` five == (eight `diff` nine))                      -- identifies that a six is indeed a six
-                      && (length (one `sim` nine) == 2 && length (one `sim` six) == 1) -- identifies that a nine is not a six
+      validSegments = (length (five \/ two) == 3)                                   -- 5,3 should all share 3 equal segments.
+                      && (six \\ five == (eight \\ nine))                      -- identifies that a six is indeed a six
+                      && (length (one \/ nine) == 2 && length (one \/ six) == 1) -- identifies that a nine is not a six
   in correctLenghts && validSegments
  where
    reverseMappings = invertMap mappings
@@ -114,12 +114,12 @@ makesSense mappings =
    invertMap = M.fromList . map swap . M.toList
 
 -- | I.e. "abcdefg" `diff` "abcefg" == "d"
-diff :: String -> String -> [Char]
-diff s1 s2 = filter (`notElem` s2) s1
+(\\) :: String -> String -> [Char]
+(\\) s1 s2 = filter (`notElem` s2) s1
 
 -- | I.e. "abc" `sim` "ab" == "ab"
-sim :: String -> String -> [Char]
-sim s1 s2 = filter (`elem` s2) s1
+(\/) :: String -> String -> [Char]
+(\/) s1 s2 = filter (`elem` s2) s1
 
 -- * Data Types
 
