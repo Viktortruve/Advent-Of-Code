@@ -14,17 +14,17 @@ main = do
   putStrLn $ "Solution 1: " ++ show (solve1 input)
   putStrLn $ "Solution 2: " ++ show (solve2 input)
 
--- * Part 1
-
-solve1 :: Input -> Result
-solve1 = solve . foldMap trace
-
 solve :: Seafloor -> Int
 solve = M.size . M.filter (>= 2) . seafloor
 
-trace :: Line -> Seafloor
-trace (some, other)
-  | x some == x other || y some == y other = s $ pure [ C x y | x <- [x first .. x last], y <- [y first .. y last]]
+-- * Part 1
+
+solve1 :: Input -> Result
+solve1 = solve . foldMap straight
+
+straight :: Line -> Seafloor
+straight (some, other)
+  | x some == x other || y some == y other = s [ C x y | x <- [x first .. x last], y <- [y first .. y last]]
   | otherwise = mempty
   where first = minC some other
         last  = maxC some other
@@ -33,26 +33,29 @@ trace (some, other)
 
 solve2 :: Input -> Result
 solve2 lines = solve (straights <> diagonals)
-  where straights = foldMap trace lines
+  where straights = foldMap straight lines
         diagonals = foldMap diagonal lines
 
 diagonal :: Line -> Seafloor
 diagonal (some, other)
-  | abs (x last - x first) == abs (y last - y first) = s . pure $ zipWith C xs ys -- 45 degrees make the dream work
+  | abs (x last - x first) == abs (y last - y first) = s (zipWith C xs ys) -- 45 degrees make the dream work
   | otherwise = mempty
   where first = minC some other
         last  = maxC some other
-        xs = if x last < x first
-             then [x last, x last + 1 .. x first] -- Form a right diagonal
-             else [x last, x last - 1 .. x first] -- Form a left diagonal
+        xs = x last ... x first
         ys = [y last, y last - 1 .. 0]
+
+(...) :: Int -> Int -> [Int]
+(...) x y
+  | x < y     = [x, x + 1 .. y] -- Form a right diagonal
+  | otherwise = [x, x - 1 .. y] -- Form a left diagonal
 
 -- * Data Types
 
 newtype Seafloor = S { seafloor :: M.Map Coord Int }
 
-s :: [[Coord]] -> Seafloor
-s = S . M.fromList . map (\c -> (c, 1)) . concat
+s :: [Coord] -> Seafloor
+s = S . M.fromList . map (\c -> (c, 1))
 
 instance Semigroup Seafloor where
   (S some) <> (S other) = S (M.unionWith (+) some other)

@@ -3,9 +3,6 @@ module Main where
 import           Text.Parsec        hiding (Line, parse)
 import           Text.Parsec.String
 
-type Input  = [Crab]
-type Result = Fuel
-
 main :: IO ()
 main = do
   input <- parse "input.txt"
@@ -16,24 +13,22 @@ main = do
 -- * Part 1
 
 solve1 :: Input -> Result
-solve1 = solve fuelcost
-  where fuelcost = id
+solve1 = solve $ \distance -> distance
 
 -- * Part 2
 
 solve2 :: Input -> Result
-solve2 = solve fuelcost
- where fuelcost distance = (distance * (distance + 1)) `div` 2
+solve2 = solve $ \distance -> (distance * (distance + 1)) `div` 2
 
 solve :: (Distance -> Fuel) -> [Crab] -> Fuel
-solve fuelcost crabs = minimum $ map fuelCostTo [minimum crabs .. maximum crabs]
-  where
-    fuelCostTo :: Pos -> Fuel
-    fuelCostTo = (sum . map fuelcost) . flip move crabs
-    move :: Pos -> [Crab] -> [Distance]
-    move destination = map (\crab -> abs $ crab - destination)
+solve metric crabs = minimum [ sum (map metric distances)
+                             | distances <- [map (\crab -> abs (crab - position)) crabs | position <- [minimum crabs .. maximum crabs]]
+                             ]
 
 -- * Data Types
+
+type Input  = [Crab]
+type Result = Fuel
 
 type Crab     = Int
 type Fuel     = Int
