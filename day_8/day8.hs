@@ -1,5 +1,6 @@
 module Main where
 
+import Data.Foldable (asum)
 import Data.Tuple (swap)
 import qualified Data.Map as M
 import Data.Maybe (mapMaybe)
@@ -60,44 +61,35 @@ obvi s
   | otherwise = mempty
 
 decodeNonObvious :: M.Map Signal Number -> [Signal] -> Maybe (M.Map Signal Number)
-decodeNonObvious mappings signals = do
-  if null unmappedSignals || null unmappedNumbers
-  then pure mappings
-  else do
+decodeNonObvious mappings signals
+  | null unmappedSignals || null unmappedNumbers = pure mappings
+  | otherwise =
   -- There are still unmapped letters to map, get going!
   -- Permuate all possible mappings of the remaining letters.
   -- Return a mapping of all the remaining letters such that there are no remaining unmapped letters.
 
-  -- If the decoding is to work, then the remaining of the unmapped numbers has to have a mapping to all
-  -- Signals.
-  -- Thus, we start with the numbers instead.
-  let num = head unmappedNumbers
-      possibleMappings = [ M.insert signal num mappings | signal <- unmappedSignals ] -- Among the signals that are left (sus), find a mapping from ONE signal onto `num`
-                                                                                      -- such that the rest of the numbers also get a mapping
-  numMapped <- find validMapping possibleMappings
-  decodeNonObvious (mappings <> numMapped) signals
-
+  -- Pick the first mapping that completely solves the current note
+  asum $ map (\mapping -> when makesSense (decodeNonObvious mapping signals)) possibleMappings
   where
-    numbers  = [Zero .. Nine]
+    -- If the decoding is to work, then the remaining of the unmapped numbers has to have a mapping to all
+    -- Signals.
+    -- Thus, we start with the numbers instead.
+    num = head unmappedNumbers
+    possibleMappings = [ M.insert signal num mappings | signal <- unmappedSignals ] -- Among the signals that are left (sus), find a mapping from ONE signal onto `num`
 
+    numbers  = [Zero .. Nine]
+    mappedNumbers = M.elems mappings
     unmappedNumbers = filter (`notElem` mappedNumbers) numbers -- I.e. 3,5,6
     unmappedSignals = filter (\signal -> M.notMember signal mappings) signals
 
-    mappedNumbers = M.elems mappings
-
-    validMapping possibleMapping =
-        case makesSense <$> decodeNonObvious possibleMapping unmappedSignals of
-        Nothing    -> False
-        Just False -> False
-        Just True  -> True
-
+    when p ma = ma >>= \a -> if p a then pure a else mempty
 
 -- | Check if a given mapping from signals to numbers make sense
 makesSense :: M.Map Signal Number -> Bool
 makesSense mappings =
   let correctLenghts = and $ zipWith (==) lenghts (sort $ map (\(num, signal) -> (num, length signal)) $ M.toList reverseMappings)
-      validSegments = (length (five \/ two) == 3)                                   -- 5,3 should all share 3 equal segments.
-                      && (six \\ five == (eight \\ nine))                      -- identifies that a six is indeed a six
+      validSegments = (length (five \/ two) == 3)                                -- 5,3 should all share 3 equal segments.
+                      && (six \\ five == (eight \\ nine))                        -- identifies that a six is indeed a six
                       && (length (one \/ nine) == 2 && length (one \/ six) == 1) -- identifies that a nine is not a six
   in correctLenghts && validSegments
  where
