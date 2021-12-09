@@ -41,20 +41,16 @@ for i in range(100):
                 ansList.append((i, j))
 basinSizes = []
 for i,j in ansList:
-    print(i,j)
     tmpMatrix = np.zeros((100, 100))
     tmpIndexes = []
-    tmpMatrix[i][j] = 2
-    while sum(sum(tmpMatrix==2))>0:
-        print(np.where(tmpMatrix == 2)[0])
-        for q, t in zip(np.where(tmpMatrix == 2)[0], np.where(tmpMatrix == 2)[1]):  # loop over expanding nodes
-            newNeigh, indexes = neighbour(q, t, N)
+    tmpMatrix[i][j] = -1
+    while sum(sum(tmpMatrix==-1))>0:
+        for q, t in zip(np.where(tmpMatrix == -1)[0], np.where(tmpMatrix == -1)[1]):  # loop over expanding nodes
+            _,indexes = neighbour(q, t, N)
             for z,y in indexes:
-                if matrix[z][y] != 9:
-                    tmpMatrix[z][y] = 2
+                if matrix[z][y] != 9 and tmpMatrix[z][y] != 1 :
+                    tmpMatrix[z][y] = -1
             tmpMatrix[q,t] = 1
     basinSizes.append(np.sum(tmpMatrix))
 
-print(np.max(basinSizes))
-print(ansList)
-print(totSum)
+print(np.prod(sorted(basinSizes,reverse=True)[0:3]))
