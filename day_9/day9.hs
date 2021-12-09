@@ -2,7 +2,7 @@ module Main where
 
 import qualified Data.Map as M
 import           Data.Char (digitToInt)
-import           Data.List (sort, nub)
+import           Data.List (sortBy, nub)
 import           Text.Parsec        hiding (Line, parse)
 import           Text.Parsec.String
 
@@ -16,8 +16,8 @@ main = do
 -- * Part 1
 
 solve1 :: Input -> Result
-solve1 grid = sum . map (risklevel . peek grid) . lowpoints $ grid
-  where risklevel = succ
+solve1 grid = sum . map risklevel . lowpoints $ grid
+  where risklevel = succ . peek grid
 
 peek :: Grid -> Coord -> Int
 peek = flip (M.findWithDefault wall)
@@ -28,8 +28,9 @@ lowpoints :: Grid -> [Coord]
 lowpoints grid = map head . filter (hasLowestPoint . map (peek grid)) $ areas grid
   where
     hasLowestPoint points = head points </ tail points
-    (</) :: Ord a => a -> [a] -> Bool
-    (</) x = not . any (<= x)
+
+(</) :: Ord a => a -> [a] -> Bool
+(</) x = not . any (<= x)
 
 areas :: Grid -> [[Coord]]
 areas grid = map (\c -> c : neighbours grid c) coordinates
@@ -41,29 +42,27 @@ neighbours grid = filter valid . adjacents
   where
     valid :: Coord -> Bool
     valid = (<= 9) . peek grid
-    adjacents (x, y) = [(x, y - 1), -- top
-                        (x - 1, y), -- left
-                        (x, y + 1), -- right
-                        (x + 1, y)] -- bottom
+    adjacents (x, y) = [(x + r, y + c) | (r, c) <- [(1, 0) , (-1, 0), (0, 1), (0, -1)]]
 
 -- * Part 2
 
 solve2 :: Input -> Result
-solve2 = product . take 3 . reverse . sort . map length . basins
+solve2 = product . take 3 . sortBy descending . map length . basins
+  where descending = flip compare
 
 basins :: Grid -> [Basin]
 basins grid = map (explore grid) (lowpoints grid)
 
 explore :: Grid -> Coord -> Basin
-explore grid lowpoint = nub $ concatMap go (lowpoint : neighbours grid lowpoint)
+explore grid = nub . go
   where
-    hasNext origin next = next `notElem` [9, 10] && next > origin
+    hasNext origin next = origin </ [next, 9]
     -- | Go in one direction, and return the trace of where we went
     go :: Coord -> [Coord]
     go c
-      | val `elem` [9, 10]    = mempty
-      | otherwise = let nabos = filter (hasNext val . peek grid) . neighbours grid $ c
-                    in c : concatMap go nabos
+      | val < 9 = let nabos = filter (hasNext val . peek grid) . neighbours grid $ c
+                  in c : concatMap go nabos
+      | otherwise = mempty
       where val = peek grid c
 
 -- * Data Types
@@ -85,7 +84,10 @@ parser = do
   rows <- manyTill row eof
   -- Pair up each value with a coordinate
   pure $ M.fromList $
-   concat [[ ((ri, ci), val) | (val, ci) <- indexed row] | (row, ri) <- indexed rows]
+   [ ((ri, ci), val)
+   | (row, ri) <- indexed rows
+   , (val, ci) <- indexed row
+   ]
   where
     indexed xs = zip xs [0 ..]
 
