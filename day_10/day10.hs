@@ -1,7 +1,7 @@
 module Main where
 
-import           Data.List (sort)
-import           Data.Either (rights)
+import           Data.List     (sort)
+import           Data.Either   (rights, lefts)
 import           Data.Foldable (foldlM)
 import           Text.Parsec        hiding (Line, parse)
 import           Text.Parsec.String
@@ -16,20 +16,18 @@ main = do
 -- * Part 1
 
 solve1 :: Input -> Result
-solve1 = sum . map (scoreL . mkStack)
+solve1 = sum . map score . lefts . map mkStack
   where
-    scoreL (Left (IllegalBrace b)) = score' b
-    scoreL _ = 0
-    score :: Paren -> Int
-    score Soft  = 3
-    score Hard  = 57
-    score Curly = 1197
-    score Angle = 25137
-    score' :: Brace -> Int
-    score' (d, b) =
-      case d of
-        R -> score b
-        L -> 0
+    score :: StackError -> Int
+    score (IllegalBrace b) =
+      case b of
+        (L, _) -> 0
+        (R, p) -> case p of
+          Soft  -> 3
+          Hard  -> 57
+          Curly -> 1197
+          Angle -> 25137
+    score _ = 0
 
 mkStack :: Line -> Either StackError (Stack Brace)
 mkStack = foldlM iter []
@@ -40,8 +38,7 @@ mkStack = foldlM iter []
             (R, _) -> do
               case peek stack of
                 Nothing -> pure $ push stack b
-                Just top -> do
-                  -- There is some brace at the top
+                Just top -> do -- There is some brace at the top
                   if top == inverse b -- I.e. top: '(', b: ')' => '(' == inverse ')': True
                     then pop' stack
                     else Left $ IllegalBrace b -- Top character does not match incomming inverse. As such, we have failed as parents.
@@ -57,16 +54,11 @@ solve2 = middle . sort . map (calcScore . autocomplete) . rights . map mkStack
     score Angle = 4
     calcScore = foldl (\tot b -> tot * 5 + score (snd b)) 0
 
-middle :: [a] -> a
-middle xs = go xs xs
-  where
-    go [] _ = undefined
-    go (a:_) [] = a
-    go (a:_) [_] = a
-    go as bs = go (drop 1 as) (drop 2 bs)
-
 autocomplete :: Stack Brace -> [Brace]
 autocomplete = reverse . map inverse . reverse
+
+middle :: [a] -> a
+middle as = as !! (length as `div` 2)
 
 -- * Data Types
 
@@ -75,6 +67,8 @@ type Result  = Int
 
 type Line = [Brace]
 
+type Brace = (Dir, Paren)
+
 data Paren
   = Soft
   | Hard
@@ -82,18 +76,15 @@ data Paren
   | Angle
   deriving (Show, Eq)
 
+data Dir = L | R
+  deriving (Show, Eq)
+
+type Stack a = [a]
+
 data StackError
   = EmptyStack
   | IllegalBrace Brace
   deriving Show
-
-
-data Dir = L | R
-  deriving (Show, Eq)
-
-type Brace = (Dir, Paren)
-
-type Stack a = [a]
 
 pop' :: Stack a -> Either StackError (Stack a)
 pop' s = do
