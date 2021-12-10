@@ -18,7 +18,6 @@ def neighbour(i,j,N):
     if j != N - 1:
         neigh.append(matrix[i][min(j + 1, N - 1)])
         indexes.append((i,j+1))
-
     if j != 0:
         neigh.append(matrix[i][max(j - 1, 0)])
         indexes.append((i,j-1))
@@ -30,9 +29,9 @@ for i, lines in enumerate (ls):
         matrix[i][j] = int(ele)
 for i in range(100):
     for j in range(100):
-
         neigh,indexes = neighbour(i,j,N)
         neigh.append(matrix[i][j])
+
         matVal = matrix[i][j]
         minVal = np.min(neigh)
         if len((np.argwhere(neigh == minVal))) == 1:
@@ -42,7 +41,6 @@ for i in range(100):
 basinSizes = []
 for i,j in ansList:
     tmpMatrix = np.zeros((100, 100))
-    tmpIndexes = []
     tmpMatrix[i][j] = -1
     while sum(sum(tmpMatrix==-1))>0:
         for q, t in zip(np.where(tmpMatrix == -1)[0], np.where(tmpMatrix == -1)[1]):  # loop over expanding nodes
@@ -53,4 +51,4 @@ for i,j in ansList:
             tmpMatrix[q,t] = 1
     basinSizes.append(np.sum(tmpMatrix))
 
-print(np.prod(sorted(basinSizes,reverse=True)[0:3]))
+print(int(np.prod(sorted(basinSizes,reverse=True)[0:3])))
