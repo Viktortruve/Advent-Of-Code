@@ -3,6 +3,7 @@ module Main where
 import qualified Data.Map as M
 import           Data.Char (digitToInt)
 import           Data.List (sortBy, nub)
+import           Data.Maybe (isJust, mapMaybe)
 import           Text.Parsec        hiding (Line, parse)
 import           Text.Parsec.String
 
@@ -16,16 +17,17 @@ main = do
 -- * Part 1
 
 solve1 :: Input -> Result
-solve1 grid = sum . map risklevel . lowpoints $ grid
-  where risklevel = succ . peek grid
+solve1 grid = sum . map risklevel . peekM grid . lowpoints $ grid
+  where risklevel = succ
 
-peek :: Grid -> Coord -> Int
-peek = flip (M.findWithDefault wall)
-  where
-    wall = 10
+peekM :: Grid -> [Coord] -> [Int]
+peekM grid = mapMaybe (peek grid)
+
+peek :: Grid -> Coord -> Maybe Int
+peek = flip M.lookup
 
 lowpoints :: Grid -> [Coord]
-lowpoints grid = map head . filter (hasLowestPoint . map (peek grid)) $ areas grid
+lowpoints grid = map head . filter (hasLowestPoint . peekM grid) $ areas grid
   where
     hasLowestPoint points = head points </ tail points
 
@@ -41,7 +43,7 @@ neighbours :: Grid -> Coord -> [Coord]
 neighbours grid = filter valid . adjacents
   where
     valid :: Coord -> Bool
-    valid = (<= 9) . peek grid
+    valid = isJust . peek grid
     adjacents (x, y) = [(x + r, y + c) | (r, c) <- [(1, 0) , (-1, 0), (0, 1), (0, -1)]]
 
 -- * Part 2
@@ -51,19 +53,19 @@ solve2 = product . take 3 . sortBy descending . map length . basins
   where descending = flip compare
 
 basins :: Grid -> [Basin]
-basins grid = map (explore grid) (lowpoints grid)
+basins grid = map (explore grid') (lowpoints grid)
+  where grid' = M.filter (< 9) grid
 
 explore :: Grid -> Coord -> Basin
 explore grid = nub . go
   where
-    hasNext origin next = origin </ [next, 9]
+    hasNext origin next = maybe False (>origin) (peek grid next)
     -- | Go in one direction, and return the trace of where we went
     go :: Coord -> [Coord]
-    go c
-      | val < 9 = let nabos = filter (hasNext val . peek grid) . neighbours grid $ c
-                  in c : concatMap go nabos
-      | otherwise = mempty
-      where val = peek grid c
+    go c = case peek grid c of
+             Nothing -> mempty
+             Just val -> let nabos = filter (hasNext val) . neighbours grid $ c
+                         in c : concatMap go nabos
 
 -- * Data Types
 
