@@ -39,10 +39,7 @@ def flash(m,l):
 def q1(m):
 	flashcount = 0
 	for n in range(0,100):
-		for i in range(0,max_y):
-			for j in range(0,max_x):
-				m[i][j] += 1 
-		
+		m += 1
 		b = len(np.argwhere(m > 9))
 		while(b > 0):
 			l = np.argwhere(m > 9)
@@ -55,11 +52,8 @@ def q1(m):
 def q2(m):
 	c = 0
 	while(len(np.argwhere(m == 0)) != len(m)*len(m[0])):
-		for i in range(0,max_y):
-			for j in range(0,max_x):
-				m[i][j] += 1 
+		m += 1
 		b = len(np.argwhere(m > 9))
-		
 		while(b > 0):
 			l = np.argwhere(m > 9)
 			m = np.where(m > 9,0,m)
