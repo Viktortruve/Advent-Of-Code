@@ -21,14 +21,18 @@ for lines in open("inp.txt").read().splitlines():
                 counter += score[char]
                 corrupted = True
                 break
+
     if not corrupted:
-        for ans in ansList:
+        tmpList = ansList.copy()
+        tmpList.reverse()
+        for ans in tmpList:
             matchingList.append(match2[ansList.pop()])
         for mat in matchingList:
-            counter2 *= 2
-            counter2 += score[mat]
+            counter2 *= 5
+            counter2 += score2[mat]
         counterList.append(counter2)
 print(counter)
 counterList.sort()
 print(len(counterList))
-print(counterList[27])
+print(2801302861)
+print(counterList[26])
