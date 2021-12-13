@@ -1,7 +1,7 @@
 module Main where
 
 import Prelude hiding (break, flip)
-import qualified Data.Map as M
+import qualified Data.Set as S
 import           Text.Parsec        hiding (Line, parse)
 import           Text.Parsec.String
 
@@ -16,7 +16,7 @@ main = do
 -- * Part 1
 
 solve1 :: Input -> Int
-solve1 (instrs, sheet) = length . M.elems . unsheet $ fold (head instrs) sheet
+solve1 (instrs, sheet) = length . S.elems . unsheet $ fold (head instrs) sheet
 
 foldMany :: [Instruction] -> Sheet -> Sheet
 foldMany instrs sheet = foldl (\s i -> fold i s) sheet instrs
@@ -28,10 +28,10 @@ fold i s = let (s1, s2) = break i s
 
 break :: Instruction -> Sheet -> (Sheet, Sheet)
 break instr s =
-  let (left, right) = M.partitionWithKey partitioner (unsheet s)
-  in (S left, S $ M.mapKeys remapper right)
+  let (left, right) = S.partition partitioner (unsheet s)
+  in (S left, S $ S.map remapper right)
   where
-    partitioner (x, y) _ =
+    partitioner (x, y) =
       case instr of
         Horizontal line -> y < line
         Vertical   line -> x < line
@@ -41,7 +41,7 @@ break instr s =
         Vertical   line -> (x - 1 - line , y)
 
 flip :: Instruction -> Sheet -> Sheet
-flip line s = S $ M.mapKeys normalize (unsheet s)
+flip line s = S $ S.map normalize (unsheet s)
   where
     normalize (x, y) =
       case line of
@@ -66,21 +66,20 @@ data Instruction = Vertical Int | Horizontal Int -- Different types of folds
   deriving Show
 
 -- A Sheet is a semigroup !
-newtype Sheet = S { unsheet :: M.Map (Int, Int) Bool }
+newtype Sheet = S { unsheet :: S.Set (Int, Int) }
 
 instance Semigroup Sheet where
-  (S s1) <> (S s2) = S $ M.unionWith (\a b -> b) s1 s2
+  (S s1) <> (S s2) = S $ S.union s1 s2
 
 instance Show Sheet where
   show (S s) =
     unlines $ chunksOf (maxX + 1)
-    [if peek (x, y) then '█' else ' ' | y <- [0 .. maxY], x <- [0.. maxX]]
+    [if S.member (x, y) s then '█' else ' ' | y <- [0 .. maxY], x <- [0.. maxX]]
     where
-      dots = M.keys s
+      dots = S.elems s
       maxX = maximum $ map fst dots
       maxY = maximum $ map snd dots
 
-      peek k = M.findWithDefault False k s
       chunksOf n xs
         | n > length xs = pure xs
         | otherwise = take n xs : chunksOf n (drop n xs)
@@ -99,7 +98,7 @@ parser = do
   where
     dots = many (parseDot <* newline)
     instructions = manyTill (parseInstruction <* newline) eof
-    mkSheet marks = S $ M.fromList (zip marks (repeat True))
+    mkSheet marks = S $ S.fromList marks
 
 parseDot :: Parser (Int, Int)
 parseDot = do
