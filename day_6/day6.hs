@@ -1,5 +1,6 @@
 module Main where
 
+import qualified Data.MultiSet as MS
 import           Text.Parsec        hiding (Line, parse)
 import           Text.Parsec.String
 
@@ -14,15 +15,19 @@ main = do
   putStrLn $ "Solution 2: " ++ show (solve input 256)
 
 solve :: Input -> Int -> Result
-solve input = sum . day
+solve input = sum' . day
   where
-    day 0 = let respawnTimers = [0..8]
-                tillSpawn days = filter (== days) input
-            in map (length . tillSpawn) respawnTimers -- How many fishes are there for each spawn timer?
+    sum'  = MS.foldOccur (\_ occurences res -> occurences + res) 0
+    day 0 = MS.fromList input
+    day d
+      = MS.insertMany 8 spawns
+      . MS.insertMany 6 spawns
+      . MS.filter (>= 0)
+      $ MS.map pred previousDay
+      where
+        previousDay = day (d - 1)
+        spawns = MS.occur 0 previousDay
 
-    day d = let (spawn:otherdays) = day (d - 1)
-            in zipWith (+) (otherdays ++ [0])      -- since 'day 0' fishes are popped off the list of days, we have to insert a 0 at the end of the list
-               [0, 0, 0, 0, 0, 0, spawn, 0, spawn] -- Those fishes that are on day 0 are moved to position 6, and leave a spawn at position 8
 
 -- * Today's parsing was actually fun and enjoyable. (no sarcasm)
 
