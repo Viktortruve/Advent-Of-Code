@@ -10,6 +10,7 @@ xVals = []
 for line in ls:
     regex2 = r"=\d"
     match2 = re.search(regex2, line)
+    print(match2)
     if match2:
         z1,z2 = line.split("=")
         if z1[-1]=='x':
@@ -38,6 +39,7 @@ def folding(axis,val,matrix):
         paper = paper[0:val, 0:] + paper[val+1:,0:]
     newPap = np.where(paper != 0, 1, 0)
     return newPap
+
 for fold in folds['order']:
     value = folds[fold].pop()
     ax = fold
