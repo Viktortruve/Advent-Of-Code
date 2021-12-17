@@ -15,7 +15,7 @@ d = {
 	'}': '{',
 	'>': '<' }
 
-with open("input.txt") as file:
+with open("inp.txt") as file:
 	l = file.readlines()
 
 incomplete = []

@@ -63,6 +63,3 @@ def q2(m):
 	return c
 print("Answer to question 1:",q1(m))
 print("Answer to question 2:",q2(m2))
-
-
-
